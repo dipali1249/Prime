@@ -1,0 +1,54 @@
+# .github/workflows/prime-finder.yml
+#
+# Continuous Prime Finder — GitHub Actions workflow
+# Runs the prime search server-side on a cron schedule.
+# 12 runs/day × 5 minutes = 60 minutes/day total.
+#
+# Place this file at: .github/workflows/prime-finder.yml
+
+name: Prime Finder
+
+on:
+  schedule:
+    # Every 2 hours at :00 (UTC) — 00:00, 02:00, 04:00, … 22:00
+    - cron: '0 */2 * * *'
+  workflow_dispatch:   # allow manual "Run workflow" from the Actions tab
+
+permissions:
+  contents: write      # needed to commit state.json + index.html back
+
+concurrency:
+  group: prime-finder
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run prime finder (5-minute session)
+        run: python prime_finder.py
+        env:
+          SESSION_SECONDS: '300'
+
+      - name: Commit updated state and report
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: prime finder session $(date -u +%Y-%m-%dT%H:%M)Z"
+            git push
+          fi
+          
