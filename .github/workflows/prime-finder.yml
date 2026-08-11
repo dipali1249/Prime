@@ -1,0 +1,59 @@
+# Continuous prime finder — runs 12 short sessions per day.
+#
+# Each session runs prime_finder.py for ~5 minutes, commits the updated
+# state.json / primes.txt back to the repo, and finishes. The next
+# scheduled session resumes from the committed state, so the search is
+# effectively continuous across runs.
+#
+# Schedule: every 2 hours, 12 times a day (00:00, 02:00, ..., 22:00 UTC).
+# Adjust the cron below to suit your timezone / cadence.
+
+name: Prime Finder
+
+on:
+  schedule:
+    # 12 runs per day, every 2 hours (UTC)
+    - cron: "0 */2 * * *"
+  workflow_dispatch: {}  # manual "Run now" button in the Actions tab
+
+permissions:
+  contents: write  # allow the bot to push commits back to the repo
+
+concurrency:
+  group: prime-finder
+  cancel-in-progress: false  # never cancel a running session mid-search
+
+jobs:
+  find-primes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5  # hard kill at 5 minutes so the runner is always free
+    steps:
+      - name: Checkout repository (with full history for committing)
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run prime finder session
+        env:
+          # Leave a 30s safety margin before the 5-min runner timeout
+          PRIME_BUDGET_SECONDS: "270"
+        run: python prime_finder.py
+
+      - name: Commit updated state and primes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stage the resume files; ignore everything else.
+          git add state.json primes.txt session.log 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "No new primes this session — nothing to commit."
+          else
+            git commit -m "chore: prime finder session $(date -u +%FT%TZ)"
+            git push
+          fi
+          
