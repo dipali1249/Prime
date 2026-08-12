@@ -10,3 +10,5 @@
 [2026-08-12 04:07:50] Session end: k=21007702, new primes in session=3710, total primes_found=7166314, largest_prime=126046213, elapsed=270.0s
 [2026-08-12 07:18:20] Session start: k=21007702, primes_found=7166314, largest_prime=126046213, budget=270s
 [2026-08-12 07:22:50] Session end: k=24241597, new primes in session=10826, total primes_found=8202484, largest_prime=145449581, elapsed=270.0s
+[2026-08-12 09:07:52] Session start: k=24241597, primes_found=8202484, largest_prime=145449581, budget=270s
+[2026-08-12 09:12:22] Session end: k=26862209, new primes in session=6527, total primes_found=9036678, largest_prime=161173241, elapsed=270.0s
