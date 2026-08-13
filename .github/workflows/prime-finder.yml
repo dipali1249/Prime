@@ -26,7 +26,7 @@ concurrency:
 jobs:
   find-primes:
     runs-on: ubuntu-latest
-    timeout-minutes: 5  # hard kill at 5 minutes so the runner is always free
+    timeout-minutes: 10  # hard kill at 5 minutes so the runner is always free
     steps:
       - name: Checkout repository (with full history for committing)
         uses: actions/checkout@v4
